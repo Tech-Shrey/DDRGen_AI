@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DDRGen AI — Detailed Diagnostic Report Generator</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="container">
+
+    <div class="header">
+      <h1>DDRGen AI</h1>
+      <p class="subtitle">Detailed Diagnostic Report Generator</p>
+      <p class="desc">Upload your property inspection report and thermal imaging report.
+      The AI will analyse both documents and generate a complete structured DDR in seconds.</p>
+    </div>
+
+    {% if error %}
+    <div class="error-box">{{ error }}</div>
+    {% endif %}
+
+    <form action="/generate" method="POST" enctype="multipart/form-data" class="upload-form">
+
+      <div class="upload-card">
+        <div class="upload-icon">📋</div>
+        <label for="inspection">Inspection Report PDF</label>
+        <p class="upload-hint">The property inspection report with observations, checklists and site photos</p>
+        <input type="file" id="inspection" name="inspection" accept=".pdf" required />
+        <div class="file-name" id="inspection-name">No file chosen</div>
+      </div>
+
+      <div class="upload-card">
+        <div class="upload-icon">🌡️</div>
+        <label for="thermal">Thermal Images PDF</label>
+        <p class="upload-hint">The thermal imaging report with temperature scan data</p>
+        <input type="file" id="thermal" name="thermal" accept=".pdf" required />
+        <div class="file-name" id="thermal-name">No file chosen</div>
+      </div>
+
+      <button type="submit" class="btn-generate">Generate DDR Report</button>
+
+    </form>
+
+    <div class="info-section">
+      <h3>What gets generated</h3>
+      <div class="info-grid">
+        <div class="info-item">📊 Property Issue Summary</div>
+        <div class="info-item">🏠 Area-Wise Observations</div>
+        <div class="info-item">🔍 Probable Root Cause</div>
+        <div class="info-item">⚠️ Severity Assessment</div>
+        <div class="info-item">✅ Recommended Actions</div>
+        <div class="info-item">📎 Supporting Photos & Thermal Scans</div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // Show selected filename
+    document.getElementById('inspection').addEventListener('change', function() {
+      document.getElementById('inspection-name').textContent =
+        this.files[0] ? this.files[0].name : 'No file chosen';
+    });
+    document.getElementById('thermal').addEventListener('change', function() {
+      document.getElementById('thermal-name').textContent =
+        this.files[0] ? this.files[0].name : 'No file chosen';
+    });
+  </script>
+</body>
+</html>

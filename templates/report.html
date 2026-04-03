@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DDR Report — DDRGen AI</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="report-container">
+
+    <!-- Top bar -->
+    <div class="report-topbar">
+      <span class="report-logo">DDRGen AI</span>
+      <div class="report-actions">
+        <a href="/download/{{ job_id }}" class="btn-download">⬇ Download .docx</a>
+        <a href="/" class="btn-new">+ New Report</a>
+      </div>
+    </div>
+
+    <!-- Image notice -->
+    <div class="image-notice">
+      <strong>📎 Note:</strong> This web view displays the text report only.
+      To view the full report with all inspection photographs and thermal scan images
+      placed under their respective observations, please
+      <a href="/download/{{ job_id }}">download the Word document (.docx)</a>.
+    </div>
+
+    <!-- Cover -->
+    <div class="report-cover">
+      <h1>DETAILED DIAGNOSTIC REPORT</h1>
+      <p class="report-subtitle">Property Inspection & Thermal Analysis</p>
+      <div class="report-meta-table">
+        <div class="meta-row"><span>Inspection Date</span><span>{{ property_info.inspection_date }}</span></div>
+        <div class="meta-row"><span>Inspected By</span><span>{{ property_info.inspected_by }}</span></div>
+        <div class="meta-row"><span>Property Type</span><span>{{ property_info.property_type }}</span></div>
+        <div class="meta-row"><span>Floors in Building</span><span>{{ property_info.floors }}</span></div>
+        <div class="meta-row"><span>Property Age</span><span>{{ property_info.property_age }}</span></div>
+        <div class="meta-row"><span>Inspection Score</span><span class="score">{{ property_info.score }}</span></div>
+        <div class="meta-row"><span>Previous Audit Done</span><span>{{ property_info.previous_audit }}</span></div>
+        <div class="meta-row"><span>Previous Repair Done</span><span>{{ property_info.previous_repair }}</span></div>
+      </div>
+    </div>
+
+    <!-- Sections -->
+    <div class="report-body">
+
+      <div class="report-section">
+        <h2>1. Property Issue Summary</h2>
+        <div class="section-content">{{ sections.property_issue_summary | replace('\n', '<br>') | safe }}</div>
+      </div>
+
+      <div class="report-section">
+        <h2>2. Area-Wise Observations</h2>
+        <div class="section-content">{{ sections.area_wise_observations | replace('\n', '<br>') | safe }}</div>
+      </div>
+
+      <div class="report-section">
+        <h2>3. Probable Root Cause</h2>
+        <div class="section-content">{{ sections.probable_root_cause | replace('\n', '<br>') | safe }}</div>
+      </div>
+
+      <div class="report-section">
+        <h2>4. Severity Assessment</h2>
+        <div class="section-content">{{ sections.severity_assessment | replace('\n', '<br>') | safe }}</div>
+      </div>
+
+      <div class="report-section">
+        <h2>5. Recommended Actions</h2>
+        <div class="section-content">{{ sections.recommended_actions | replace('\n', '<br>') | safe }}</div>
+      </div>
+
+      <div class="report-section">
+        <h2>6. Additional Notes</h2>
+        <div class="section-content">{{ sections.additional_notes | replace('\n', '<br>') | safe }}</div>
+      </div>
+
+      <div class="report-section">
+        <h2>7. Missing or Unclear Information</h2>
+        <div class="section-content">{{ sections.missing_unclear_information | replace('\n', '<br>') | safe }}</div>
+      </div>
+
+    </div>
+
+    <!-- Bottom download bar -->
+    <div class="report-footer">
+      <p>Full report with embedded inspection photos and thermal scans available in the Word document.</p>
+      <a href="/download/{{ job_id }}" class="btn-download-large">⬇ Download Full Report (.docx)</a>
+      <a href="/" class="btn-new-large">Generate Another Report</a>
+    </div>
+
+  </div>
+</body>
+</html>

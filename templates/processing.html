@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Generating Report — DDRGen AI</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="container">
+
+    <div class="header">
+      <h1>DDRGen AI</h1>
+      <p class="subtitle">Generating your report...</p>
+    </div>
+
+    <div class="processing-card">
+      <div class="spinner"></div>
+      <p class="step-text" id="step-text">Starting pipeline...</p>
+      <p class="step-hint">This usually takes 60 to 90 seconds. Please do not close this tab.</p>
+
+      <div class="progress-steps">
+        <div class="step" id="s1">📄 Extracting PDF data</div>
+        <div class="step" id="s2">🔧 Structuring data</div>
+        <div class="step" id="s3">🤖 AI generating report</div>
+        <div class="step" id="s4">📝 Building Word document</div>
+      </div>
+    </div>
+
+    <div id="error-box" class="error-box" style="display:none;"></div>
+
+  </div>
+
+  <script>
+    const jobId = "{{ job_id }}";
+    const stepEl = document.getElementById('step-text');
+    const errorBox = document.getElementById('error-box');
+
+    const stepMap = [
+      { key: "Extracting", el: "s1" },
+      { key: "Structuring", el: "s2" },
+      { key: "AI", el: "s3" },
+      { key: "Generating Word", el: "s4" },
+    ];
+
+    function highlightStep(stepText) {
+      stepMap.forEach(s => {
+        const el = document.getElementById(s.el);
+        if (stepText.toLowerCase().includes(s.key.toLowerCase())) {
+          el.classList.add('active');
+        }
+      });
+    }
+
+    function poll() {
+      fetch('/status/' + jobId)
+        .then(r => r.json())
+        .then(data => {
+          stepEl.textContent = data.step || 'Processing...';
+          highlightStep(data.step || '');
+
+          if (data.status === 'done') {
+            document.querySelectorAll('.step').forEach(el => el.classList.add('active'));
+            stepEl.textContent = 'Report ready! Redirecting...';
+            setTimeout(() => {
+              window.location.href = '/report/' + jobId;
+            }, 1000);
+          } else if (data.status === 'error') {
+            errorBox.style.display = 'block';
+            errorBox.textContent = 'Error: ' + data.error;
+            document.querySelector('.spinner').style.display = 'none';
+          } else {
+            setTimeout(poll, 2000);
+          }
+        })
+        .catch(() => setTimeout(poll, 3000));
+    }
+
+    poll();
+  </script>
+</body>
+</html>
