@@ -722,3 +722,81 @@ A bold amber notice bar at the top of the report page:
 
 This sets clear expectations for the user and directs them to the download
 immediately.
+
+---
+
+## Deployment — Getting a Permanent Public URL
+
+The local Flask server (`http://127.0.0.1:5000`) only works on your own machine
+while the script is running. To get a permanent URL that anyone can access
+anytime, the app is deployed to Render.
+
+### Why Render
+
+- Free tier, no credit card required
+- Deploys directly from GitHub
+- Supports Python/Flask natively
+- Gives a permanent public URL (e.g. `https://ddrgen-ai.onrender.com`)
+- Why not Heroku: free tier was removed in 2022
+- Why not Vercel: Python backend support is limited, not suited for long-running processes
+
+---
+
+### Deployment Steps
+
+**1. Push code to GitHub**
+
+```bash
+git init
+git add .
+git commit -m "Initial commit - DDRGen AI complete"
+git remote add origin https://github.com/YOUR_USERNAME/ddrgen-ai.git
+git push -u origin main
+```
+
+The `.gitignore` protects `.env`, `venv/`, `uploads/`, `outputs/`, and
+`temp_images/` — none of these are pushed to GitHub.
+
+**2. Deploy on Render**
+
+- Go to https://render.com and sign up with GitHub
+- Click New → Web Service → connect your `ddrgen-ai` repository
+- Fill in:
+  - Name: `ddrgen-ai`
+  - Region: Singapore (closest to India)
+  - Runtime: Python 3
+  - Build Command: `pip install -r requirements.txt`
+  - Start Command: `gunicorn app:app --timeout 120 --workers 1`
+  - Instance Type: Free
+- Add Environment Variable: `GROQ_API_KEY` = your `gsk_...` key
+- Click Create Web Service
+
+Render builds and deploys in 3-5 minutes. Once Live status appears, the
+permanent URL is ready.
+
+---
+
+### Why the Start Command Uses Extra Flags
+
+The default Render start command is `gunicorn app:app`. Two flags are added:
+
+`--timeout 120`
+The DDR pipeline takes approximately 90 seconds (PDF extraction + AI generation
++ Word document creation). Gunicorn's default timeout is 30 seconds. Without
+this flag, Render kills the request mid-pipeline and the user gets a 502 error.
+120 seconds gives enough headroom for the full pipeline to complete.
+
+`--workers 1`
+Render's free tier provides approximately 512MB RAM. Each gunicorn worker loads
+the full pipeline into memory independently. Multiple workers would exhaust RAM
+and crash the service. One worker handles requests sequentially which is
+appropriate for this use case.
+
+---
+
+### Important Note on Free Tier Behaviour
+
+Render's free tier spins down the service after 15 minutes of inactivity to
+save resources. The first request after an idle period takes approximately
+30 seconds to wake up. Subsequent requests are instant. This is expected
+behaviour on the free plan and does not affect functionality.
