@@ -729,14 +729,23 @@ immediately.
 
 The local Flask server (`http://127.0.0.1:5000`) only works on your own machine
 while the script is running. To get a permanent URL that anyone can access
-anytime, the app is deployed to Render.
+anytime, the app is deployed to Railway.
 
-### Why Render
+### Why Railway (and not Render)
 
-- Free tier, no credit card required
-- Deploys directly from GitHub
-- Supports Python/Flask natively
-- Gives a permanent public URL (e.g. `https://ddrgen-ai.onrender.com`)
+The app was first deployed on Render (free tier). It failed with:
+`Worker (pid:57) was sent SIGKILL! Perhaps out of memory?`
+
+Render's free tier provides 512MB RAM. PyMuPDF alone uses ~300MB when processing
+PDFs, and the full pipeline (extraction + structuring + AI + Word generation)
+exceeds the limit. The worker gets killed mid-run.
+
+Railway was chosen as the replacement because:
+- Free tier provides ~1GB RAM — enough for the full pipeline
+- Deploys directly from GitHub, same as Render
+- Auto-detects Python and uses the Procfile
+- Gives a permanent public URL instantly
+- $5 free credit per month covers light usage
 - Why not Heroku: free tier was removed in 2022
 - Why not Vercel: Python backend support is limited, not suited for long-running processes
 
@@ -757,46 +766,40 @@ git push -u origin main
 The `.gitignore` protects `.env`, `venv/`, `uploads/`, `outputs/`, and
 `temp_images/` — none of these are pushed to GitHub.
 
-**2. Deploy on Render**
+**2. Deploy on Railway**
 
-- Go to https://render.com and sign up with GitHub
-- Click New → Web Service → connect your `ddrgen-ai` repository
-- Fill in:
-  - Name: `ddrgen-ai`
-  - Region: Singapore (closest to India)
-  - Runtime: Python 3
-  - Build Command: `pip install -r requirements.txt`
-  - Start Command: `gunicorn app:app --timeout 120 --workers 1`
-  - Instance Type: Free
-- Add Environment Variable: `GROQ_API_KEY` = your `gsk_...` key
-- Click Create Web Service
+- Go to https://railway.app and sign up with GitHub
+- Click New Project → Deploy from GitHub repo
+- Select your `ddrgen-ai` repository
+- Click Variables tab → Add Variable:
+  - Key: `GROQ_API_KEY` — Value: your `gsk_...` key
+- Click Settings → Networking → Generate Domain
+- Select region: Asia Pacific (Singapore) for best performance from India
 
-Render builds and deploys in 3-5 minutes. Once Live status appears, the
-permanent URL is ready.
+Railway auto-detects Python, installs from `requirements.txt`, and starts the
+app using the `Procfile`. Permanent URL is ready in 2-3 minutes.
 
 ---
 
 ### Why the Start Command Uses Extra Flags
 
-The default Render start command is `gunicorn app:app`. Two flags are added:
+The Procfile contains: `gunicorn app:app --timeout 120 --workers 1`
 
 `--timeout 120`
 The DDR pipeline takes approximately 90 seconds (PDF extraction + AI generation
 + Word document creation). Gunicorn's default timeout is 30 seconds. Without
-this flag, Render kills the request mid-pipeline and the user gets a 502 error.
-120 seconds gives enough headroom for the full pipeline to complete.
+this flag, the server kills the request mid-pipeline and the user gets a 502
+error. 120 seconds gives enough headroom for the full pipeline to complete.
 
 `--workers 1`
-Render's free tier provides approximately 512MB RAM. Each gunicorn worker loads
-the full pipeline into memory independently. Multiple workers would exhaust RAM
-and crash the service. One worker handles requests sequentially which is
-appropriate for this use case.
+Each gunicorn worker loads the full pipeline into memory independently. Multiple
+workers would exhaust RAM and crash the service. One worker handles requests
+sequentially which is appropriate for this use case.
 
 ---
 
 ### Important Note on Free Tier Behaviour
 
-Render's free tier spins down the service after 15 minutes of inactivity to
-save resources. The first request after an idle period takes approximately
-30 seconds to wake up. Subsequent requests are instant. This is expected
-behaviour on the free plan and does not affect functionality.
+Railway's free tier may spin down after periods of inactivity. The first request
+after an idle period takes approximately 30 seconds to wake up. Subsequent
+requests are instant. This is expected behaviour on the free plan.
